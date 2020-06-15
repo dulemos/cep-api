@@ -1,6 +1,7 @@
 const request = require("supertest");
 const app = require("../../src/app");
 const truncate = require("../utils/truncate");
+const { Address } = require("../../src/app/models");
 
 describe("Address", () => {
   beforeEach(async () => {
@@ -14,10 +15,15 @@ describe("Address", () => {
     expect(response.status).toBe(201);
   });
 
-  it("Should not return status 406 when cep is not valid", async () => {
+  it("Should return status 406 when cep is not valid", async () => {
     const response = await request(app).get("/cep/123");
     expect(response.status).toBe(406);
   });
+
+  it("Should return status 406 when cep doesnt exist", async () => {
+    const response = await request(app).get("/cep/12345678");
+    expect(response.status).toBe(406);
+  })
 
   it("Should return correct address", async () => {
     const response = await request(app).get("/cep/04571010");
@@ -27,6 +33,12 @@ describe("Address", () => {
       localidade: "São Paulo",
       uf: "SP",
     };
-    expect(response.body).toStrictEqual(result)
+    expect(response.body).toStrictEqual(result);
+  });
+
+  it("Should save the address in database for future requests", async () => {
+    const response = await request(app).get("/cep/04571010");
+    const data = await Address.findOne({where: {"cep": response.body.cep}});
+    expect(data.dataValues.cep).toBe(response.body.cep);
   });
 });
