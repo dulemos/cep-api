@@ -14,6 +14,7 @@ const getAddress = async (cepReceived, res) => {
     } else {
         const data = await request(`https://viacep.com.br/ws/${cepReceived}/json/`);
         const jsonData = await data.json();
+        console.log(jsonData)
         if(jsonData.erro){
             res.status(406).send({erro: "O CEP enviado é inexistente."});
         }else{
